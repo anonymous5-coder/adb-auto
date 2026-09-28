@@ -1,6 +1,4 @@
 # Build artifacts
-*.deb
-repo/
 
 # Python cache
 __pycache__/
