@@ -1,5 +1,7 @@
 # adb-auto
 
+**Current version:** 1.0.2
+
 One-time No-WiFi auto-ADB setup via Termux (one-time Wi-Fi only).
 
 Automates wireless debugging pairing, port detection, and persistent `localhost:5555` connection. After the initial setup, you can turn Wi-Fi off and use ADB over mobile data until the next reboot.
@@ -16,7 +18,7 @@ Automates wireless debugging pairing, port detection, and persistent `localhost:
 Add the APT repository and install the package:
 
 ~~~bash
-echo "deb [trusted=yes] https://anonymous5-coder.github.io/adb-auto/ termux main" > $PREFIX/etc/apt/sources.list.d/adb-auto.list
+echo "deb [trusted=yes arch=all] https://anonymous5-coder.github.io/adb-auto/repo/ termux extras" > $PREFIX/etc/apt/sources.list.d/adb-auto.list
 pkg update
 pkg install adb-auto
 ~~~
@@ -37,7 +39,7 @@ adb_auto help        # Show all commands
 - Termux with `android-tools`, `python`, and `termux-api` installed
 - Termux:API app installed on the device
 - Wireless Debugging enabled in Developer Options
-- `pip install zeroconf` (installed automatically on first run)
+- Run `pip install zeroconf` once before first use.
 
 ## License
 
