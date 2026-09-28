@@ -1,15 +1,15 @@
 Package: adb-auto
-Version: 1.0.1
+Version: 1.0.2
 Architecture: all
 Maintainer: shivam <rathvashivam5@gmail.com>
 Installed-Size: 7
 Depends: android-tools, python, python-pip, termux-api
 Homepage: https://github.com/anonymous5-coder/adb-auto
 Description: One-time No-WiFi auto-ADB setup via Termux
-Filename: dists/termux/extras/binary-all/adb-auto_1.0.1_all.deb
-Size: 3112
-MD5Sum: e68dcaa05ce49c1566388f426f802cdd
-SHA1: c61faed1e0faf4b8572e4580d13540e6f4592802
-SHA256: 4886dfd829bbf5a0bac73f216a9a3eb31d9cb3459e80aad3c5d2b1ccd7a2f381
-SHA512: 2236e61f13023f3ce34ab6535748bb15fd85867d50775bdeba162b0536c1e54b3ea7d9a29e629beb7cbfaaeb80f1e1af388d07886d7a930a2f49e81b1127fe3e
+Filename: dists/termux/extras/binary-all/adb-auto_1.0.2_all.deb
+Size: 3116
+MD5Sum: ce800ac561dd89a577bba159fde94fe4
+SHA1: a6dbc38d088771993fa15a3456f89341739cd447
+SHA256: 29dcb7f6cf0f958c79794070e57e8167f8d2e665f75d97580e98b3af370832f5
+SHA512: feecaf06959c331e6f683002bc26874e8d7e5358ce3f84b93acb6618fb1ef9e3c166bc560dbdfecebe83c62609343d4b9c63772dc201cc0e612d9648a30c1392
 
