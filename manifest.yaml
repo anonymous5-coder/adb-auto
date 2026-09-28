@@ -1,6 +1,6 @@
 control:
   Package: adb-auto
-  Version: 1.0.0
+  Version: 1.0.1
   Architecture: all
   Maintainer: shivam <rathvashivam5@gmail.com>
   Description: "One-time No-WiFi auto-ADB setup via Termux"
