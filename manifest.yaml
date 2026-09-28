@@ -1,0 +1,12 @@
+control:
+  Package: adb-auto
+  Version: 1.0.0
+  Architecture: all
+  Maintainer: shivam <rathvashivam5@gmail.com>
+  Description: "One-time No-WiFi auto-ADB setup via Termux"
+  Homepage: "https://github.com/anonymous5-coder/adb-auto"
+  Depends: android-tools, python, python-pip, termux-api
+installation_prefix: "/data/data/com.termux/files/usr"
+data_files:
+  bin/adb_auto:
+    source: adb_auto

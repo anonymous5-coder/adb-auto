@@ -1,0 +1,14 @@
+# Build artifacts
+*.deb
+repo/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Termux cache
+.cache/
+
+# Editor files
+*.swp
+*~

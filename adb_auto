@@ -1,0 +1,222 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+
+CACHE_DIR="$HOME/.cache/adb_auto"
+mkdir -p "$CACHE_DIR"
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
+log()  { echo -e "${GREEN}[+]${NC} $1"; }
+warn() { echo -e "${YELLOW}[!]${NC} $1"; }
+err()  { echo -e "${RED}[-]${NC} $1"; }
+info() { echo -e "${CYAN}[i]${NC} $1"; }
+
+detect_service_port() {
+    local service_name="$1"
+    local timeout="${2:-3}"
+    python3 -c "
+from zeroconf import Zeroconf, ServiceBrowser
+import threading
+done = threading.Event()
+class L:
+    def add_service(self, zc, t, n):
+        if not done.is_set():
+            info = zc.get_service_info(t, n)
+            if info:
+                print(info.port)
+                done.set()
+    def remove_service(self, *a): pass
+    def update_service(self, *a): pass
+zc = Zeroconf()
+ServiceBrowser(zc, '${service_name}', L())
+done.wait(timeout=${timeout})
+zc.close()
+" 2>/dev/null
+}
+
+detect_with_progress() {
+    local service_name="$1"
+    local label="$2"
+    local max_wait="${3:-20}"
+    local elapsed=0
+    printf "%s " "$label" >&2
+    while [[ $elapsed -lt $max_wait ]]; do
+        local RESULT
+        RESULT=$(detect_service_port "$service_name" 3 2>/dev/null | head -n 1 || true)
+        if [[ -n "$RESULT" ]]; then
+            printf " done.\n" >&2
+            echo "$RESULT"
+            return 0
+        fi
+        printf "." >&2
+        elapsed=$((elapsed + 3))
+    done
+    printf " timed out.\n" >&2
+    return 1
+}
+
+wait_for_pairing_port() {
+    echo ""
+    info "Open Settings > Developer Options > Wireless Debugging."
+    info "Tap 'Pair device with pairing code' and keep that screen OPEN."
+    echo ""
+    PAIR_PORT=$(detect_with_progress "_adb-tls-pairing._tcp.local." "Looking for pairing service" 60) || {
+        err "Timed out. Make sure the pairing screen is open."
+        exit 1
+    }
+    log "Pairing port detected: $PAIR_PORT"
+}
+
+get_pairing_code() {
+    echo ""
+    info "A notification has been posted. Enter the 6-digit code there."
+    
+    rm -f "$CACHE_DIR/pair_code"
+    
+    termux-notification \
+        --id adb_pairing \
+        --title "ADB Pairing" \
+        --content "Enter the 6-digit pairing code" \
+        --button1 "Send" \
+        --button1-action "echo \$REPLY > $CACHE_DIR/pair_code" \
+        --priority high \
+        --led-color FF0000FF
+
+    echo "Waiting for you to enter the code in the notification..."
+    while [[ ! -s "$CACHE_DIR/pair_code" ]]; do
+        sleep 1
+    done
+
+    PAIR_CODE=$(cat "$CACHE_DIR/pair_code" | tr -d '[:space:]')
+    rm -f "$CACHE_DIR/pair_code"
+
+    if [[ -z "$PAIR_CODE" ]]; then
+        err "No code entered."
+        exit 1
+    fi
+    echo ""
+}
+
+pair_device() {
+    if adb devices | grep -qE "^(127\.0\.0\.1|localhost):[0-9]+[[:space:]]+device$"; then
+        log "Already paired and connected. Skipping pairing."
+        return
+    fi
+    wait_for_pairing_port
+    get_pairing_code
+    info "Sending pairing request (this may take a few seconds)..."
+    if adb pair "127.0.0.1:$PAIR_PORT" <<< "$PAIR_CODE"; then
+        log "Pairing successful."
+    else
+        err "Pairing failed. Code may be wrong or expired."
+        exit 1
+    fi
+}
+
+connect_and_persist() {
+    echo ""
+    CONNECT_PORT=$(detect_with_progress "_adb-tls-connect._tcp.local." "Looking for connection service" 20) || {
+        err "Timed out. Make sure Wireless Debugging is ON."
+        exit 1
+    }
+    log "Connection port detected: $CONNECT_PORT"
+
+    echo ""
+    info "Connecting to 127.0.0.1:$CONNECT_PORT ..."
+    adb connect "127.0.0.1:$CONNECT_PORT"
+
+    local ready=0
+    for ((i=1; i<=6; i++)); do
+        if adb devices | grep -qE "^127\.0\.0\.1:$CONNECT_PORT[[:space:]]+device$"; then
+            ready=1
+            break
+        fi
+        sleep 1
+    done
+    if [[ $ready -eq 0 ]]; then
+        err "Connection failed."
+        exit 1
+    fi
+    log "Connected successfully."
+
+    echo ""
+    info "Switching ADB to TCP/IP mode on port 5555..."
+    if ! adb -s "127.0.0.1:$CONNECT_PORT" tcpip 5555; then
+        err "Failed to switch ADB daemon to TCP/IP mode on port 5555."
+        exit 1
+    fi
+    log "ADB daemon switched to TCP/IP mode."
+
+    echo ""
+    info "Reconnecting via localhost:5555 ..."
+    adb disconnect "127.0.0.1:$CONNECT_PORT" >/dev/null 2>&1 || true
+
+    local connected=0
+    for ((i=1; i<=10; i++)); do
+        sleep 1
+        if adb connect "localhost:5555" 2>&1 | grep -qiE "connected"; then
+            connected=1
+            break
+        fi
+    done
+
+    echo ""
+    if [[ $connected -eq 1 ]] && adb devices | grep -qE "^(localhost|127\.0\.0\.1):5555[[:space:]]+device$"; then
+        log "Persistent connection established."
+        log "You may now turn Wi-Fi OFF and use mobile data."
+        echo ""
+        info "Active devices:"
+        adb devices
+    else
+        err "Failed to persist connection."
+        exit 1
+    fi
+}
+
+reset_all() {
+    warn "Resetting ADB state..."
+    rm -rf "$CACHE_DIR"
+    adb disconnect >/dev/null 2>&1 || true
+    adb kill-server >/dev/null 2>&1 || true
+    log "Reset complete."
+}
+
+show_help() {
+    echo ""
+    echo "adb_auto - ADB Wireless Debugging Automation"
+    echo ""
+    echo "Usage: adb_auto <command>"
+    echo ""
+    echo "Commands:"
+    echo "  start       - Detect ports, pair if needed, connect, persist via localhost:5555"
+    echo "  reconnect   - Reconnect to localhost:5555 (use after connection drop, no reboot)"
+    echo "  disconnect  - Disconnect from localhost:5555"
+    echo "  status      - Show currently connected devices"
+    echo "  reset       - Clear cache and kill the ADB server"
+    echo "  help, ?     - Show this help message"
+    echo ""
+}
+
+case "${1:-}" in
+    start) pair_device; connect_and_persist ;;
+    reconnect)
+        adb connect "localhost:5555"
+        adb devices
+        ;;
+    disconnect)
+        adb disconnect "localhost:5555" >/dev/null 2>&1 || true
+        adb devices
+        ;;
+    status) adb devices ;;
+    reset) reset_all ;;
+    help|"?"|"")
+        if [[ -z "${1:-}" ]]; then
+            echo ""
+            echo "[i] Tip: run 'adb_auto help' or 'adb_auto ?' to see all commands."
+        fi
+        show_help
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'adb_auto help' to see available commands."
+        ;;
+esac
