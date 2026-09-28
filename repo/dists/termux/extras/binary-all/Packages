@@ -8,8 +8,8 @@ Homepage: https://github.com/anonymous5-coder/adb-auto
 Description: One-time No-WiFi auto-ADB setup via Termux
 Filename: dists/termux/extras/binary-all/adb-auto_1.0.0_all.deb
 Size: 3116
-MD5Sum: 1cec6a16af075b1fb1d80d0df90ac3dc
-SHA1: d322073f96734e26e0cb95049ef5dc0da32ad6bb
-SHA256: fb53ca261c9d3459366997962d9141577ddbc455b3fd759ac12499d737ed6343
-SHA512: d6bf7827e00d9af559682a3c6348ef3a4514a5175fbf253bb3ec01369c3924adcc34e5a918bcdf7ddb3e3fb7474b6d79b02b395a9ac3156208403d2377f14b72
+MD5Sum: 6aca22820488d81a11434800377692a0
+SHA1: 388704843a5d217f3e64cf9550a5607ffc201e5b
+SHA256: ff56a9b06ce72bffb0ec36f3b7ad1081bda269bd0fffe7d2c055ac73654683d9
+SHA512: baf5d5396f84b6b2f38029ea91aa79b879b76d949cb659b32418ee78a2f542e06a88d44effd5689dfd437e8462847ea5afb16028095bba2292abc16074ce822b
 
