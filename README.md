@@ -1,6 +1,6 @@
 # adb-auto
 
-**Current version:** 1.0.2
+**Current version:** 1.0.3
 
 One-time No-WiFi auto-ADB setup via Termux (one-time Wi-Fi only).
 
@@ -38,7 +38,8 @@ adb_auto help        # Show all commands
 
 - Termux with `android-tools`, `python`, and `termux-api` installed
 - Termux:API app installed on the device
-- Wireless Debugging enabled in Developer Options
+- Wireless Debugging enabled in Developer Options (for initial setup)
+- Standard USB Debugging enabled in Developer Options (keeps daemon alive when Wi-Fi is off)
 - Run `pip install zeroconf` once before first use.
 
 ## License

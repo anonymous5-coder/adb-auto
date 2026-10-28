@@ -163,6 +163,7 @@ connect_and_persist() {
     if [[ $connected -eq 1 ]] && adb devices | grep -qE "^(localhost|127\.0\.0\.1):5555[[:space:]]+device$"; then
         log "Persistent connection established."
         log "You may now turn Wi-Fi OFF and use mobile data."
+        warn "Keep standard 'USB Debugging' ON in Developer Options so Android does not kill adbd."
         echo ""
         info "Active devices:"
         adb devices
@@ -199,6 +200,7 @@ show_help() {
 case "${1:-}" in
     start) pair_device; connect_and_persist ;;
     reconnect)
+        adb disconnect "localhost:5555" >/dev/null 2>&1 || true
         adb connect "localhost:5555"
         adb devices
         ;;
